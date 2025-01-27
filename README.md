@@ -1,0 +1,33 @@
+# CopyPaste
+
+A self-hosted solution to share text and files through a web-based interface without hassles
+
+## Installation
+
+> [!WARNING]  
+> CopyPaste uses http. Be sure to use to secure your connection if
+> you intend to use CopyPaste outside your local network
+
+Just clone the repo and start the container
+
+```sh
+cd ./copypaste
+docker compose up -d --build
+```
+
+## Functions
+
+### Clipboard
+
+Put any text you want and it will be displayed to be copied on other devices
+
+### Files
+
+TODO
+
+## TODO
+
+- [ ] Implement files management in a secure way
+- [ ] Change the deletion method for the clipboard
+- [ ] Improve the UI
+- [ ] Write tests

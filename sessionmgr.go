@@ -1,0 +1,124 @@
+package main
+
+import (
+	"crypto/rand"
+	"encoding/base64"
+	"errors"
+	"log"
+	"net/http"
+	"os"
+	"sync"
+	"time"
+)
+
+var (
+	defaultExpir = 36 * time.Hour
+	sessions     = newSessionMap()
+)
+
+// Associate a cookie to a user and provide some utility functions
+type session struct {
+	user   string
+	cookie http.Cookie
+}
+
+func (s *session) revitalize() {
+	s.cookie.Expires = time.Now().Add(defaultExpir)
+}
+
+func (s *session) expired() bool {
+	exp := s.cookie.Expires
+	if exp.After(time.Now()) && !exp.IsZero() {
+		return true
+	} else {
+		return false
+	}
+}
+
+type sessionMap struct {
+	m map[string]session
+	sync.RWMutex
+}
+
+func newSessionMap() sessionMap {
+	return sessionMap{make(map[string]session), sync.RWMutex{}}
+}
+
+func (m *sessionMap) session(r *http.Request) (s session, exists bool) {
+	exists = false
+
+	cookie, err := r.Cookie("cook")
+	if err != nil {
+		log.Printf("ERR: %v\n", err)
+		return
+	}
+
+	m.RLock()
+	s, exists = m.m[cookie.Value]
+	m.RUnlock()
+	return
+}
+
+// A func to be called periodically to remove expired sessions
+func cleanSessions() {
+	sessions.Lock()
+	defer sessions.Unlock()
+	for cookie, sess := range sessions.m {
+		if sess.expired() {
+			delete(sessions.m, cookie)
+		}
+	}
+	time.AfterFunc(time.Minute, func() { cleanSessions() }) // Call this function periodically
+}
+
+// Auth checker
+func (env *Env) checkUser(r *http.Request) (*http.Cookie, error) {
+	if err := r.ParseForm(); err != nil {
+		log.Printf("err: %v\n", err)
+		return nil, err // bad request
+	}
+
+	// Get username and password from the form
+	form := r.PostForm
+	uname := form.Get("username")
+	pw := form.Get("password")
+	rem := form.Get("remember")
+	if uname == "" || pw == "" {
+		return nil, errors.New("invalid username or password") // bad request
+	}
+
+	if err := env.dataManager.userExists(env.db, uname, pw); err != nil {
+		return nil, err
+	}
+
+	// Create the cookie
+	exp := time.Now().Add(defaultExpir)
+	if rem == "on" {
+		exp = time.Now().AddDate(50, 0, 0)
+	}
+
+	cookieBytes := make([]byte, 20)
+	if _, err := rand.Read(cookieBytes); err != nil {
+		log.Printf("err: %v\n", err)
+		return nil, err // internalSErr
+	}
+	cookieVal := base64.URLEncoding.EncodeToString(cookieBytes[:20])
+	cookie := http.Cookie{
+		Name:     "cook",
+		Value:    cookieVal,
+		Path:     "/",
+		Expires:  exp,
+		HttpOnly: true,
+	}
+
+	sessions.Lock()
+	sessions.m[cookieVal] = session{uname, cookie}
+	sessions.Unlock()
+
+	// Create a file directory for the user
+	if err := os.Mkdir("./filedir/"+uname, 0664); err != nil {
+		log.Printf("err: %v\n", err)
+	}
+
+	return &cookie, nil
+}

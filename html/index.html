@@ -1,0 +1,53 @@
+{{define "index"}}
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="/tailwind.css" rel="stylesheet" />
+  </head>
+
+  <script src="/htmx.min.js"></script>
+
+  <body>
+    <div id="overlay"></div>
+    <div id="main" class="bg-blue-800 antialiased min-h-screen">
+      <div
+        hx-boost="true"
+        class="sticky top-0 z-10 backdrop-blur text-2xl lg:text-3xl xl:text-4xl font-bold p-4 flex space-x-4 bg-blue-200/15 shadow-md shadow-slate-400/5"
+      >
+        <a
+          href=""
+          hx-get="/clipboard"
+          hx-target="#list-container"
+          hx-swap="innerHTML"
+          hx-replace-url="true"
+          hx-push-url="true"
+          class="text-inherit hover:text-orange-300 duration-200"
+          >Clipboard</a
+        >
+        <a
+          href=""
+          hx-get="/file"
+          hx-target="#list-container"
+          hx-swap="innerHTML"
+          hx-replace-url="true"
+          hx-push-url="true"
+          class="text-inherit hover:text-orange-300 duration-200"
+          >Files</a
+        >
+      </div>
+      <div id="list-container" class="m-4">
+        {{block "cliplist" .}}{{end}} {{block "files" .}}{{end}}
+      </div>
+    </div>
+    <div
+      hidden
+      hx-get="/clipboard"
+      hx-trigger="Clipboard-Load from:body"
+      hx-target="#list-container"
+      hx-swap="innerHTML"
+    />
+  </body>
+</html>
+{{end}} {{define "nil"}}{{end}}

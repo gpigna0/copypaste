@@ -1,0 +1,72 @@
+{{define "login"}}
+<!doctype html>
+<html class="">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="/tailwind.css" rel="stylesheet" />
+  </head>
+
+  <script src="/htmx.min.js"></script>
+
+  <body class="min-h-screen">
+    <div
+      id="main"
+      class="bg-blue-800 text-slate-300 antialiased min-h-screen flex flex-col items-center justify-center space-y-6"
+    >
+      <form
+        id="loginform"
+        hx-post="/login"
+        hx-target="#main"
+        hx-swap="outerHTML"
+      >
+        <div class="pb-2 flex justify-center flex-wrap gap-6">
+          <div>
+            <input
+              type="text"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              id="usernameinp"
+              name="username"
+              class="login-field"
+              placeholder="username"
+              required
+            />
+          </div>
+          <div>
+            <input
+              type="password"
+              id="passwordinp"
+              name="password"
+              class="login-field"
+              placeholder="password"
+              required
+            />
+          </div>
+        </div>
+        <div class="pb-2 flex items-center flex-wrap space-x-2">
+          <input
+            type="checkbox"
+            id="remembermenp"
+            name="remember"
+            class="form-checkbox text-emerald-700 rounded-sm border-none focus:ring-emerald-700 focus:ring-offset-emerald-200"
+          />
+          <label for="remembermenp" class="text-xl"> Remember Me </label>
+        </div>
+      </form>
+      <div class="">
+        <input
+          type="submit"
+          form="loginform"
+          value="Login"
+          class="ok-button"
+          placeholder="Due Time..."
+        />
+        <span id="loginmessage" class="">{{ . }}</span>
+      </div>
+    </div>
+  </body>
+</html>
+{{end}} {{template "login" .}}

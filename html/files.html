@@ -1,0 +1,35 @@
+{{define "files"}}
+<div id="display-files" class="text-gray-200 flex space-x-6">
+  {{ range . }} {{if .IsDir}}
+  <span>{{.Name}}/</span>
+  {{else}}
+  <div>
+    <a download href="/files/{{.Name}}">{{.Name}}</a>
+  </div>
+  {{end}}{{end}}
+</div>
+<div id="upload-file" class="flex flex-row-reverse space-x-4 space-x-reverse">
+  <form
+    id="file-form"
+    hx-post="/file/new"
+    hx-swap="innerHTML"
+    hx-target="#display-files"
+    hx-select="#display-files"
+    hx-on::after-request="if (event.detail.successful) this.reset()"
+    hx-encoding="multipart/form-data"
+    class="flex flex-row-reverse space-x-4 space-x-reverse"
+  >
+    <div>
+      <label
+        for="file-upload"
+        class="ok-button cursor-pointer flex items-center"
+        >Upload File</label
+      >
+      <input type="file" id="file-upload" multiple hidden />
+    </div>
+    <div>
+      <input type="submit" value="Upload" class="ok-button cursor-pointer" />
+    </div>
+  </form>
+</div>
+{{end}} {{template "files" .}}
