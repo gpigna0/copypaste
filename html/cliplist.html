@@ -1,16 +1,8 @@
 {{define "cliplist"}}
-<div id="todo-list" class="flex flex-col space-y-2">
-  {{range .}}
-  <div
-    class="flex items-center space-x-4 max-w-full px-4 py-1 rounded-lg bg-blue-200/15 hover:bg-blue-200/25 duration-200"
-  >
-    <span class="grow indent-0 whitespace-pre-wrap">{{.Text}}</span>
-    <!-- TODO: Instead of a button for each entry put a checkbox and a Delete Selection-->
-    <button hx-delete="/clipboard?id={{.Id}}" class="del-button">Delete</button>
-  </div>
-  {{end}}
-</div>
-<div id="creatediv" class="mt-4">
+<div id="creatediv" class="flex space-x-2 mb-4">
+  <button hx-get="/clipboard" hx-target="#list-container" class="ok-button">
+    Refresh
+  </button>
   <button
     hx-get="/clipboard/new"
     hx-swap="beforeend settle:0s"
@@ -19,6 +11,19 @@
   >
     Create
   </button>
+  <span class="grow"></span>
   <button hx-delete="/clipboard/all" class="del-button">Delete All</button>
+</div>
+<div id="todo-list" class="flex flex-col space-y-2">
+  {{range .}}
+  <div class="flex items-center space-x-2 max-w-full">
+    <span
+      class="grow indent-0 whitespace-pre-wrap px-3 py-1 rounded-lg bg-blue-200/15 hover:bg-blue-200/25 duration-200"
+      >{{.Text}}</span
+    >
+    <!-- TODO: Instead of a button for each entry put a checkbox and a Delete Selection-->
+    <button hx-delete="/clipboard?id={{.Id}}" class="del-button">Delete</button>
+  </div>
+  {{end}}
 </div>
 {{end}} {{template "cliplist" .}}
