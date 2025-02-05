@@ -23,7 +23,7 @@ Put any text you want and it will be displayed to be copied on other devices
 
 ### Files
 
-TODO
+Upload the files you want to share with other devices
 
 ## TODO
 

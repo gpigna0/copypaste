@@ -32,12 +32,12 @@ func (env *Env) newClip(w HTMLWriter, r *http.Request, _ session) {
 }
 
 func (env *Env) getFiles(w HTMLWriter, _ *http.Request, s session) {
-	ftree, err := os.ReadDir("./filedir/" + s.user)
+	files, err := env.dataManager.allFiles(env.db, s.user)
 	if err != nil {
 		log.Printf("err: %v\n", err)
 		return
 	}
-	sendTemplate(w, ftree, "files", "./html/files.html")
+	sendTemplate(w, files, "files", "./html/files.html")
 }
 
 // POST //
@@ -89,7 +89,12 @@ func (env *Env) postFile(w HTMLWriter, r *http.Request, s session) {
 			}
 			defer file.Close()
 
-			local, err := os.Create(fmt.Sprintf("./filedir/%s/%s", user, f.Filename))
+			fname, err := env.dataManager.insertFile(env.db, user, f.Filename)
+			if err != nil {
+				log.Printf("err: %v\n", err)
+				continue
+			}
+			local, err := os.Create(fmt.Sprintf("./filedir/%s/%s", user, fname))
 			if err != nil {
 				log.Printf("err: %v\n", err)
 				continue
@@ -102,13 +107,13 @@ func (env *Env) postFile(w HTMLWriter, r *http.Request, s session) {
 		}
 	}
 
-	ftree, err := os.ReadDir("./filedir/" + user)
+	files, err := env.dataManager.allFiles(env.db, s.user)
 	if err != nil {
 		log.Printf("err: %v\n", err)
 		w.Status = http.StatusInternalServerError
 	}
 	w.WriteHeader()
-	sendTemplate(w, ftree, "files", "./html/files.html")
+	sendTemplate(w, files, "files", "./html/files.html")
 }
 
 // DELETE //
@@ -135,8 +140,10 @@ func (env *Env) deleteAllClips(w HTMLWriter, r *http.Request, s session) {
 	sendTemplate(w, "", "nil", "./html/index.html")
 }
 
-// SERVE //
+// TODO: Add handler to delete files
 
+// SERVE //
+// TODO: Remove - serve file on-demand
 func (env *Env) serveFiles(w HTMLWriter, r *http.Request, s session) {
 	user := s.user
 

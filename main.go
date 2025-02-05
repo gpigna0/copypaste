@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS clipboard (
-  id        SMALLSERIAL PRIMARY KEY,
+  id        BIGINT GENERATED ALWAYS AS IDENTITY,
   clip_text TEXT NOT NULL,
   username  VARCHAR(25) NOT NULL,
 
@@ -45,7 +45,19 @@ CREATE TABLE IF NOT EXISTS clipboard (
     FOREIGN KEY (username) REFERENCES users(username)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-);`
+);
+
+CREATE TABLE IF NOT EXISTS files (
+  id       BIGINT GENERATED ALWAYS AS IDENTITY,
+  filename TEXT UNIQUE NOT NULL,
+  username VARCHAR(25) NOT NULL,
+
+  CONSTRAINT fk_users
+    FOREIGN KEY (username) REFERENCES users(username)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+  `
 
 	if _, err := pool.Exec(context.Background(), initDb); err != nil {
 		log.Printf("err: %v\n", err)
@@ -71,18 +83,18 @@ func main() {
 
 	http.HandleFunc("GET /clipboard", handlerWrapper(env.getClips))
 	http.HandleFunc("GET /clipboard/new", handlerWrapper(env.newClip))
-	// TODO: http.HandleFunc("GET /file", handlerWrapper(env.getFiles))
+	http.HandleFunc("GET /file", handlerWrapper(env.getFiles))
+	// TODO: Serve the files
 
 	http.HandleFunc("POST /login", handlerWrapper(env.postLogin))
 	http.HandleFunc("POST /clipboard/new", handlerWrapper(env.postClip))
-	// TODO: http.HandleFunc("POST /file/new", handlerWrapper(env.postFile))
+	http.HandleFunc("POST /file/new", handlerWrapper(env.postFile))
 
 	http.HandleFunc("DELETE /clipboard", handlerWrapper(env.deleteClip))
 	http.HandleFunc("DELETE /clipboard/all", handlerWrapper(env.deleteAllClips))
 
 	static := http.FileServer(http.Dir("./static"))
 	http.Handle("/", static)
-	// TODO: http.HandleFunc("/files/", handlerWrapper(env.serveFiles))
 
 	if err := http.ListenAndServe(":2000", nil); err != nil {
 		log.Printf("err: %v\n", err)
