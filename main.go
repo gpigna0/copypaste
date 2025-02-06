@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -29,9 +30,7 @@ func NewEnv() (*Env, error) {
 		return nil, err
 	}
 
-	initDb := `CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
-CREATE TABLE IF NOT EXISTS users (
+	initDb := `CREATE TABLE IF NOT EXISTS users (
   username   VARCHAR(25) PRIMARY KEY,
   password   TEXT NOT NULL
 );
@@ -76,7 +75,11 @@ func main() {
 	defer env.db.Close()
 
 	if err := os.Mkdir("filedir", 0664); err != nil {
-		log.Printf("%v\n", err)
+		if errors.Is(err, os.ErrExist) {
+			log.Printf("err: %v\n", err)
+		} else {
+			log.Fatalf("err: %v\n", err)
+		}
 	}
 
 	http.HandleFunc("/{$}", handlerWrapper(env.mainPage))

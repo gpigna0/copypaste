@@ -9,6 +9,8 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 var (
@@ -73,9 +75,51 @@ func cleanSessions() {
 
 // Auth checker
 func (env *Env) checkUser(r *http.Request) (*http.Cookie, error) {
+	uname, pw, rem, err := loginInfo(r)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the user's password hash and compare it with the received pw.
+	// If the user does not exist create a new user
+	storedPassword, err := env.dataManager.userExists(env.db, uname)
+	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+		password, err := hashPassword(pw)
+		if err != nil {
+			return nil, err
+		}
+		if err := env.dataManager.insertUser(env.db, uname, password); err != nil {
+			return nil, err
+		}
+	} else {
+		hashCompare(pw, storedPassword)
+	}
+
+	// Create the cookie
+	cookie, err := makeSession(uname, rem)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a file directory for the user
+	if err := os.Mkdir("./filedir/"+uname, 0664); err != nil {
+		if errors.Is(err, os.ErrExist) {
+			log.Printf("err: %v\n", err)
+		} else {
+			return nil, err
+		}
+	}
+
+	return cookie, nil
+}
+
+func loginInfo(r *http.Request) (string, string, string, error) {
 	if err := r.ParseForm(); err != nil {
 		log.Printf("err: %v\n", err)
-		return nil, err // bad request
+		return "", "", "", err // bad request
 	}
 
 	// Get username and password from the form
@@ -84,23 +128,22 @@ func (env *Env) checkUser(r *http.Request) (*http.Cookie, error) {
 	pw := form.Get("password")
 	rem := form.Get("remember")
 	if uname == "" || pw == "" {
-		return nil, errors.New("invalid username or password") // bad request
+		return "", "", "", errors.New("invalid username or password") // bad request
 	}
 
-	if err := env.dataManager.userExists(env.db, uname, pw); err != nil {
-		return nil, err
-	}
+	return uname, pw, rem, nil
+}
 
-	// Create the cookie
+func makeSession(user, remember string) (*http.Cookie, error) {
 	exp := time.Now().Add(defaultExpir)
-	if rem == "on" {
+	if remember == "on" {
 		exp = time.Now().AddDate(50, 0, 0)
 	}
 
 	cookieBytes := make([]byte, 20)
 	if _, err := rand.Read(cookieBytes); err != nil {
 		log.Printf("err: %v\n", err)
-		return nil, err // internalSErr
+		return nil, err
 	}
 	cookieVal := base64.URLEncoding.EncodeToString(cookieBytes[:20])
 	cookie := http.Cookie{
@@ -112,13 +155,7 @@ func (env *Env) checkUser(r *http.Request) (*http.Cookie, error) {
 	}
 
 	sessions.Lock()
-	sessions.m[cookieVal] = session{uname, cookie}
+	sessions.m[cookie.Value] = session{user, cookie}
 	sessions.Unlock()
-
-	// Create a file directory for the user
-	if err := os.Mkdir("./filedir/"+uname, 0664); err != nil {
-		log.Printf("err: %v\n", err)
-	}
-
 	return &cookie, nil
 }

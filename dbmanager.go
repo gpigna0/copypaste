@@ -31,7 +31,8 @@ type dbData interface {
 	insertFile(db *pgxpool.Pool, user string, filename string) (string, error)
 	allFiles(db *pgxpool.Pool, user string) ([]file, error)
 	deleteFile(db *pgxpool.Pool, user string, id string) error
-	userExists(*pgxpool.Pool, string, string) error
+	userExists(db *pgxpool.Pool, user string) (string, error)
+	insertUser(db *pgxpool.Pool, user string, password string) error
 }
 
 type defaultDbData struct{}
@@ -114,20 +115,22 @@ func (defaultDbData) deleteFile(db *pgxpool.Pool, user string, id string) error 
 	return nil
 }
 
-func (defaultDbData) userExists(db *pgxpool.Pool, uname string, pw string) error {
-	res := db.QueryRow(context.Background(), "SELECT COUNT(*) FROM users WHERE username = '"+uname+"' AND password = crypt('"+pw+"', password)")
-	var count int
-	if err := res.Scan(&count); err != nil {
-		return err
+func (defaultDbData) userExists(db *pgxpool.Pool, uname string) (string, error) {
+	res := db.QueryRow(context.Background(), "SELECT (password) FROM users WHERE username = '"+uname+"'")
+	var pw string
+	if err := res.Scan(&pw); err != nil {
+		return "", err
 	}
 
-	if count < 1 {
-		_, err := db.Exec(context.Background(), "INSERT INTO users (username, password) VALUES ('"+uname+"', crypt('"+pw+"', gen_salt('bf')))")
-		if err != nil {
-			return err
-		}
-		log.Printf("Created user %s", uname)
+	return pw, nil
+}
+
+func (defaultDbData) insertUser(db *pgxpool.Pool, user string, password string) error {
+	query := fmt.Sprintf("INSERT INTO users (username, password) VALUES ('%s', '%s')", user, password)
+	if _, err := db.Exec(context.Background(), query); err != nil {
+		return err
 	}
+	log.Printf("Created user %s\n", user)
 
 	return nil
 }
