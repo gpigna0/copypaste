@@ -105,7 +105,7 @@ func (env *Env) checkUser(r *http.Request) (*http.Cookie, error) {
 	}
 
 	// Create a file directory for the user
-	if err := os.Mkdir("./filedir/"+uname, 0664); err != nil {
+	if err := os.Mkdir("/filedir/"+uname, 0664); err != nil {
 		if errors.Is(err, os.ErrExist) {
 			log.Printf("err: %v\n", err)
 		} else {

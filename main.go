@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -74,20 +73,12 @@ func main() {
 	}
 	defer env.db.Close()
 
-	if err := os.Mkdir("filedir", 0664); err != nil {
-		if errors.Is(err, os.ErrExist) {
-			log.Printf("err: %v\n", err)
-		} else {
-			log.Fatalf("err: %v\n", err)
-		}
-	}
-
 	http.HandleFunc("/{$}", handlerWrapper(env.mainPage))
 
 	http.HandleFunc("GET /clipboard", handlerWrapper(env.getClips))
 	http.HandleFunc("GET /clipboard/new", handlerWrapper(env.newClip))
 	http.HandleFunc("GET /file", handlerWrapper(env.getFiles))
-	// TODO: Serve the files
+	http.HandleFunc("GET /file/{fileId}", handlerWrapper(env.sendFile))
 
 	http.HandleFunc("POST /login", handlerWrapper(env.postLogin))
 	http.HandleFunc("POST /clipboard/new", handlerWrapper(env.postClip))

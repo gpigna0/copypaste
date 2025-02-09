@@ -2,7 +2,7 @@
 <div id="display-files" class="text-gray-200 flex space-x-6">
   {{ range . }}
   <div>
-    <a download href="/files/{{.Id}}">{{.Filename}}</a>
+    <a download href="/file/{{.Id}}">{{.Filename}}</a>
   </div>
   {{end}}
 </div>

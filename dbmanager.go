@@ -30,6 +30,7 @@ type dbData interface {
 	deleteAllClips(*pgxpool.Pool, string) error
 	insertFile(db *pgxpool.Pool, user string, filename string) (string, error)
 	allFiles(db *pgxpool.Pool, user string) ([]file, error)
+	fileName(db *pgxpool.Pool, user string, id string) (string, error)
 	deleteFile(db *pgxpool.Pool, user string, id string) error
 	userExists(db *pgxpool.Pool, user string) (string, error)
 	insertUser(db *pgxpool.Pool, user string, password string) error
@@ -108,6 +109,16 @@ func (defaultDbData) allFiles(db *pgxpool.Pool, user string) ([]file, error) {
 
 	files, err := pgx.CollectRows(rows, pgx.RowToStructByName[file])
 	return files, err
+}
+
+func (defaultDbData) fileName(db *pgxpool.Pool, user string, id string) (string, error) {
+	query := fmt.Sprintf("SELECT (filename) FROM files WHERE username='%s' AND id=%s", user, id)
+	row := db.QueryRow(context.Background(), query)
+	var fname string
+	if err := row.Scan(&fname); err != nil {
+		return "", err
+	}
+	return fname, nil
 }
 
 func (defaultDbData) deleteFile(db *pgxpool.Pool, user string, id string) error {

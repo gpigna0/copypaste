@@ -1,11 +1,15 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"regexp"
+
+	"github.com/jackc/pgx/v5"
 )
 
 // ALL //
@@ -38,6 +42,36 @@ func (env *Env) getFiles(w HTMLWriter, _ *http.Request, s session) {
 		return
 	}
 	sendTemplate(w, files, "files", "./html/files.html")
+}
+
+// fileValidator is a regex that matches only file ids
+var fileValidator = regexp.MustCompile(`^\d+$`)
+
+func (env *Env) sendFile(w HTMLWriter, r *http.Request, s session) {
+	fileId := r.PathValue("fileId")
+	if !fileValidator.MatchString(fileId) {
+		w.Status = http.StatusBadRequest
+		w.WriteHeader()
+		w.Writer.Write([]byte{})
+		return
+	}
+	path := fmt.Sprintf("/filedir/%s/%s", s.user, fileId)
+	fileName, err := env.dataManager.fileName(env.db, s.user, fileId)
+	if err != nil {
+		log.Printf("err: %v\n", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			w.Status = http.StatusNotFound
+		} else {
+			w.Status = http.StatusInternalServerError
+		}
+		w.WriteHeader()
+		w.Writer.Write([]byte{})
+		return
+	}
+
+	w.Writer.Header().Set("Content-Disposition", "filename="+fileName)
+	// w.WriteHeader()
+	http.ServeFile(w.Writer, r, path)
 }
 
 // POST //
@@ -94,7 +128,7 @@ func (env *Env) postFile(w HTMLWriter, r *http.Request, s session) {
 				log.Printf("err: %v\n", err)
 				continue
 			}
-			local, err := os.Create(fmt.Sprintf("./filedir/%s/%s", user, fname))
+			local, err := os.Create(fmt.Sprintf("/filedir/%s/%s", user, fname))
 			if err != nil {
 				log.Printf("err: %v\n", err)
 				continue
@@ -141,12 +175,3 @@ func (env *Env) deleteAllClips(w HTMLWriter, r *http.Request, s session) {
 }
 
 // TODO: Add handler to delete files
-
-// SERVE //
-// TODO: Remove - serve file on-demand
-func (env *Env) serveFiles(w HTMLWriter, r *http.Request, s session) {
-	user := s.user
-
-	files := http.StripPrefix("/files", http.FileServer(http.Dir("./filedir/"+user)))
-	files.ServeHTTP(w.Writer, r)
-}

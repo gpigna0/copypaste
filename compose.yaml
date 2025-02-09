@@ -13,6 +13,8 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=example
       - POSTGRES_DB=mydb
+    volumes:
+      - files:/filedir
     develop:
       watch:
         - path: ./html
@@ -38,6 +40,7 @@ services:
 
 volumes:
   db-data:
+  files:
 
 networks:
   copynet:
