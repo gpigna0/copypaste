@@ -1,8 +1,9 @@
 {{define "files"}}
-<div id="display-files" class="text-gray-200 flex space-x-6">
+<div id="display-files" class="text-gray-200 grid grid-cols-4 gap-4 mb-6">
   {{ range . }}
-  <div>
-    <a download href="/file/{{.Id}}">{{.Filename}}</a>
+  <div class="flex flex-col max-w-40 max-h-40">
+    <a download href="/file/{{.Id}}" class="overflow-hidden">{{.Filename}}</a>
+    <button hx-delete="/file?id={{.Id}}" class="del-button">Delete</button>
   </div>
   {{end}}
 </div>

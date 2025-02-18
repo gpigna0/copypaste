@@ -31,7 +31,7 @@ type dbData interface {
 	insertFile(db *pgxpool.Pool, user string, filename string) (string, error)
 	allFiles(db *pgxpool.Pool, user string) ([]file, error)
 	fileName(db *pgxpool.Pool, user string, id string) (string, error)
-	deleteFile(db *pgxpool.Pool, user string, id string) error
+	deleteFiles(db *pgxpool.Pool, user string, ids ...string) ([]string, error)
 	userExists(db *pgxpool.Pool, user string) (string, error)
 	insertUser(db *pgxpool.Pool, user string, password string) error
 }
@@ -121,9 +121,29 @@ func (defaultDbData) fileName(db *pgxpool.Pool, user string, id string) (string,
 	return fname, nil
 }
 
-func (defaultDbData) deleteFile(db *pgxpool.Pool, user string, id string) error {
-	// TODO: Implement
-	return nil
+// deleteFiles deletes file entries based on received ids
+// and returns the set of filenames that need to be deleted from the system
+func (defaultDbData) deleteFiles(db *pgxpool.Pool, user string, ids ...string) ([]string, error) {
+	if len(ids) == 0 {
+		return []string{}, nil
+	}
+	idSet := strings.Join(ids, ",")
+
+	query := fmt.Sprintf("SELECT (filename) FROM files WHERE username = '%s' AND id IN (%s)", user, idSet)
+	rows, err := db.Query(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+	tbd, err := pgx.CollectRows(rows, pgx.RowTo[string])
+	if err != nil {
+		return nil, err
+	}
+
+	query = fmt.Sprintf("DELETE FROM files WHERE username = '%s' AND id IN (%s)", user, idSet)
+	if _, err := db.Exec(context.Background(), query); err != nil {
+		return nil, err
+	}
+	return tbd, nil
 }
 
 func (defaultDbData) userExists(db *pgxpool.Pool, uname string) (string, error) {

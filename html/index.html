@@ -48,6 +48,13 @@
       hx-target="#list-container"
       hx-swap="innerHTML"
     />
+    <div
+      hidden
+      hx-get="/files"
+      hx-trigger="Files-Load from:body"
+      hx-target="#list-container"
+      hx-swap="innerHTML"
+    />
   </body>
 </html>
 {{end}} {{define "nil"}}{{end}}

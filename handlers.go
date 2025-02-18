@@ -12,6 +12,9 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// fileValidator is a regex that matches only file ids
+var fileValidator = regexp.MustCompile(`^\d+$`)
+
 // ALL //
 
 func (env *Env) mainPage(w HTMLWriter, r *http.Request, _ session) {
@@ -43,9 +46,6 @@ func (env *Env) getFiles(w HTMLWriter, _ *http.Request, s session) {
 	}
 	sendTemplate(w, files, "files", "./html/files.html")
 }
-
-// fileValidator is a regex that matches only file ids
-var fileValidator = regexp.MustCompile(`^\d+$`)
 
 func (env *Env) sendFile(w HTMLWriter, r *http.Request, s session) {
 	fileId := r.PathValue("fileId")
@@ -174,4 +174,22 @@ func (env *Env) deleteAllClips(w HTMLWriter, r *http.Request, s session) {
 	sendTemplate(w, "", "nil", "./html/index.html")
 }
 
-// TODO: Add handler to delete files
+func (env *Env) deleteFile(w HTMLWriter, r *http.Request, s session) {
+	ids := r.URL.Query()["id"]
+
+	fnames, err := env.dataManager.deleteFiles(env.db, s.user, ids...)
+	if err != nil {
+		log.Printf("ERR: %v\n", err)
+		w.Status = http.StatusInternalServerError
+	} else {
+		for _, fname := range fnames {
+			if err := os.Remove(fmt.Sprintf("/filedir/%s/%s", s.user, fname)); err != nil {
+				log.Printf("err: %v\n", err)
+				continue
+			}
+		}
+	}
+	w.Writer.Header().Set("HX-Trigger", "Files-Load")
+	w.WriteHeader()
+	sendTemplate(w, "", "nil", "./html/index.html")
+}
