@@ -64,11 +64,8 @@ func (defaultDbData) deleteClips(db *pgxpool.Pool, user string, ids ...string) e
 		return nil
 	}
 
-	for i, id := range ids {
-		ids[i] = "id=" + id
-	}
-	idCond := strings.Join(ids, " AND ")
-	query := fmt.Sprintf("DELETE FROM clipboard WHERE username = '%s' AND %s", user, idCond)
+	idSet := strings.Join(ids, ",")
+	query := fmt.Sprintf("DELETE FROM clipboard WHERE username = '%s' AND id IN (%s)", user, idSet)
 	if _, err := db.Exec(context.Background(), query); err != nil {
 		return err
 	}

@@ -13,6 +13,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+const SESSIONCOOKIE = "Session-id"
+
 var (
 	defaultExpir = 36 * time.Hour
 	sessions     = newSessionMap()
@@ -49,7 +51,7 @@ func newSessionMap() sessionMap {
 func (m *sessionMap) session(r *http.Request) (s session, exists bool) {
 	exists = false
 
-	cookie, err := r.Cookie("cook")
+	cookie, err := r.Cookie(SESSIONCOOKIE)
 	if err != nil {
 		log.Printf("ERR: %v\n", err)
 		return
@@ -147,7 +149,7 @@ func makeSession(user, remember string) (*http.Cookie, error) {
 	}
 	cookieVal := base64.URLEncoding.EncodeToString(cookieBytes[:20])
 	cookie := http.Cookie{
-		Name:     "cook",
+		Name:     SESSIONCOOKIE,
 		Value:    cookieVal,
 		Path:     "/",
 		Expires:  exp,
