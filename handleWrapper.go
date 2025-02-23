@@ -55,15 +55,6 @@ const (
 	reset   = "\033[0m"
 )
 
-func htmxColor(h http.Header) string {
-	switch h.Get("HX-Request") {
-	case "true":
-		return green
-	default:
-		return red
-	}
-}
-
 func statusCodeColor(s int) string {
 	switch {
 	case s >= http.StatusContinue && s < http.StatusOK:

@@ -177,12 +177,12 @@ func (env *Env) deleteAllClips(w HTMLWriter, r *http.Request, s session) {
 func (env *Env) deleteFile(w HTMLWriter, r *http.Request, s session) {
 	ids := r.URL.Query()["id"]
 
-	fnames, err := env.dataManager.deleteFiles(env.db, s.user, ids...)
+	err := env.dataManager.deleteFiles(env.db, s.user, ids...)
 	if err != nil {
 		log.Printf("ERR: %v\n", err)
 		w.Status = http.StatusInternalServerError
 	} else {
-		for _, fname := range fnames {
+		for _, fname := range ids {
 			if err := os.Remove(fmt.Sprintf("/filedir/%s/%s", s.user, fname)); err != nil {
 				log.Printf("err: %v\n", err)
 				continue

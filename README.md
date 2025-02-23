@@ -27,7 +27,7 @@ Upload the files you want to share with other devices
 
 ## TODO
 
-- [ ] Implement files management in a secure way
-- [ ] Change the deletion method for the clipboard
+- [x] ~Implement files management~
+- [ ] Add icons for files
 - [ ] Improve the UI
 - [ ] Write tests
