@@ -3,7 +3,7 @@
 
 @layer base {
   html {
-    @apply text-slate-50 text-lg;
+    @apply text-slate-50;
   }
 }
 
@@ -12,7 +12,7 @@
 }
 
 @utility del-button {
-  @apply px-2 py-0.5 rounded-lg font-bold xl:text-lg bg-pink-600 hover:bg-pink-700 duration-200;
+  @apply px-2 py-0.5 rounded-lg font-bold xl:text-lg bg-pink-600 hover:bg-red-600 duration-200;
 }
 
 @utility login-field {

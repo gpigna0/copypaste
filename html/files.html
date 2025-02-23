@@ -1,13 +1,5 @@
 {{define "files"}}
-<div id="display-files" class="text-gray-200 grid grid-cols-4 gap-4 mb-6">
-  {{ range . }}
-  <div class="flex flex-col max-w-40 max-h-40">
-    <a download href="/file/{{.Id}}" class="overflow-hidden">{{.Filename}}</a>
-    <button hx-delete="/file?id={{.Id}}" class="del-button">Delete</button>
-  </div>
-  {{end}}
-</div>
-<div id="upload-file" class="flex flex-row-reverse space-x-4 space-x-reverse">
+<div id="upload-file" class="mb-4">
   <form
     id="file-form"
     hx-post="/file/new"
@@ -16,13 +8,45 @@
     hx-select="#display-files"
     hx-on::after-request="if (event.detail.successful) this.reset()"
     hx-encoding="multipart/form-data"
-    class="flex flex-row-reverse space-x-4 space-x-reverse"
+    class="flex space-x-2"
   >
-    <label for="file-upload" class="ok-button cursor-pointer flex items-center"
+    <label for="file-upload" class="ok-button flex cursor-pointer items-center"
       >Upload File</label
     >
     <input type="file" name="file" id="file-upload" multiple hidden />
     <input type="submit" value="Upload" class="ok-button cursor-pointer" />
   </form>
+</div>
+<div id="display-files" class="flex flex-wrap gap-4 text-gray-200">
+  {{ range . }}
+  <div class="flex items-center justify-center">
+    <a
+      download
+      href="/file/{{.Id}}"
+      class="text-wrap block w-40 whitespace-normal break-words sm:text-sm md:text-base"
+    >
+      {{.Filename}}
+    </a>
+    <button
+      hx-delete="/file?id={{.Id}}"
+      class="hover:bg-blue-950/85 m-1 flex items-center justify-center rounded-md bg-blue-950/60 fill-pink-600 p-1 duration-150 ease-in hover:cursor-pointer hover:fill-red-600"
+    >
+      <svg
+        version="1.1"
+        viewBox="0 0 32 32"
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-4 w-4"
+      >
+        <path
+          d="m2.1213 30.121a2.8336 2.8336 176.53 004-.24264l23.757-23.757a3 3 90 000-4.2426 2.8336 2.8336 176.53 00-4 .24264l-23.757 23.757a3 3 90 000 4.2426z"
+        />
+        <path
+          transform="matrix(-1,0,0,1,32,0)"
+          d="m2.1213 30.121a2.8336 2.8336 176.53 004-.24264l23.757-23.757a3 3 90 000-4.2426 2.8336 2.8336 176.53 00-4 .24264l-23.757 23.757a3 3 90 000 4.2426z"
+        />
+      </svg>
+    </button>
+  </div>
+  {{end}}
 </div>
 {{end}} {{template "files" .}}

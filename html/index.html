@@ -11,10 +11,10 @@
 
   <body>
     <div id="overlay"></div>
-    <div id="main" class="bg-blue-800 antialiased min-h-screen">
+    <div id="main" class="min-h-screen bg-blue-800 antialiased">
       <div
         hx-boost="true"
-        class="sticky top-0 z-10 backdrop-blur text-2xl lg:text-3xl xl:text-4xl font-bold p-4 flex space-x-4 bg-blue-200/15 shadow-md shadow-slate-400/5"
+        class="bg-blue-200/15 sticky top-0 z-10 flex space-x-4 p-2 text-2xl font-bold shadow-md shadow-slate-400/5 backdrop-blur lg:p-3 lg:text-3xl xl:p-4 xl:text-4xl"
       >
         <a
           href=""
@@ -23,7 +23,7 @@
           hx-swap="innerHTML"
           hx-replace-url="true"
           hx-push-url="true"
-          class="text-inherit hover:text-orange-300 duration-200"
+          class="text-inherit duration-200 hover:text-orange-300"
           >Clipboard</a
         >
         <a
@@ -33,7 +33,7 @@
           hx-swap="innerHTML"
           hx-replace-url="true"
           hx-push-url="true"
-          class="text-inherit hover:text-orange-300 duration-200"
+          class="text-inherit duration-200 hover:text-orange-300"
           >Files</a
         >
       </div>
@@ -47,14 +47,14 @@
       hx-trigger="Clipboard-Load from:body"
       hx-target="#list-container"
       hx-swap="innerHTML"
-    />
+    ></div>
     <div
       hidden
-      hx-get="/files"
+      hx-get="/file"
       hx-trigger="Files-Load from:body"
       hx-target="#list-container"
       hx-swap="innerHTML"
-    />
+    ></div>
   </body>
 </html>
 {{end}} {{define "nil"}}{{end}}
