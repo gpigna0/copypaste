@@ -9,30 +9,32 @@
 
   <script src="/htmx.min.js"></script>
 
-  <body class="min-h-screen">
+  <body class="bg-slate-900 antialiased">
     <div
       id="main"
-      class="bg-blue-800 text-slate-300 antialiased min-h-screen flex flex-col items-center justify-center space-y-6"
+      class="min-h-screen bg-slate-900 flex items-center justify-center"
     >
-      <form
-        id="loginform"
-        hx-post="/login"
-        hx-target="#main"
-        hx-swap="outerHTML"
+      <div
+        class="bg-slate-800 p-6 text-center max-w-md w-full rounded-2xl shadow-lg"
       >
-        <div class="pb-2 flex justify-center flex-wrap gap-6">
+        <h2 class="text-3xl font-bold mb-8">Login</h2>
+        <form
+          id="loginform"
+          hx-post="/login"
+          hx-target="body"
+          hx-swap="innerHTML"
+          class="space-y-4"
+        >
           <div>
             <input
               type="text"
-              autocomplete="off"
-              autocorrect="off"
-              autocapitalize="off"
+              autocapitalize="none"
               spellcheck="false"
               id="usernameinp"
               name="username"
-              class="login-field"
-              placeholder="username"
+              placeholder="Username"
               required
+              class="w-full px-4 py-2 border-2 border-slate-300 rounded-lg focus:outline-none focus:border-2 focus:border-orange-400"
             />
           </div>
           <div>
@@ -40,31 +42,30 @@
               type="password"
               id="passwordinp"
               name="password"
-              class="login-field"
-              placeholder="password"
+              placeholder="Password"
               required
+              class="w-full px-4 py-2 border-2 border-slate-300 rounded-lg focus:outline-none focus:border-2 focus:border-orange-400"
             />
           </div>
-        </div>
-        <div class="pb-2 flex items-center flex-wrap space-x-2">
+          <div class="">
+            <input
+              type="checkbox"
+              id="remembermenp"
+              name="remember"
+              class="w-4 h-4 rounded-lg accent-orange-400 focus:ring-orange-400"
+            />
+            <label for="remembermenp" class=""> Remember Me </label>
+          </div>
+        </form>
+        <div class="">
           <input
-            type="checkbox"
-            id="remembermenp"
-            name="remember"
-            class="form-checkbox text-emerald-700 rounded-sm border-none focus:ring-emerald-700 focus:ring-offset-emerald-200"
+            type="submit"
+            form="loginform"
+            value="Login"
+            class="w-full mt-4 btn"
           />
-          <label for="remembermenp" class="text-xl"> Remember Me </label>
+          <span id="loginmessage" class="">{{ . }}</span>
         </div>
-      </form>
-      <div class="">
-        <input
-          type="submit"
-          form="loginform"
-          value="Login"
-          class="ok-button"
-          placeholder="Due Time..."
-        />
-        <span id="loginmessage" class="">{{ . }}</span>
       </div>
     </div>
   </body>

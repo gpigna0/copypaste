@@ -7,14 +7,6 @@
   }
 }
 
-@utility ok-button {
-  @apply px-2 py-0.5 rounded-lg font-bold xl:text-lg bg-orange-600 hover:bg-orange-700 duration-200;
-}
-
-@utility del-button {
-  @apply px-2 py-0.5 rounded-lg font-bold xl:text-lg bg-pink-600 hover:bg-red-600 duration-200;
-}
-
-@utility login-field {
-  @apply appearance-none bg-slate-700 placeholder-slate-400 p-1 xl:p-2 xl:text-xl rounded-md xl:rounded-lg border-2 border-transparent focus:border-emerald-700 focus:ring-transparent;
+@utility btn {
+  @apply bg-orange-400 rounded-lg text-lg px-4 py-0.5 hover:bg-orange-500 duration-200;
 }
