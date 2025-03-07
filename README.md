@@ -29,5 +29,7 @@ Upload the files you want to share with other devices
 
 - [x] ~Implement files management~
 - [ ] Add icons for files
-- [ ] Improve the UI
+- [x] ~Improve the UI~
+- [ ] Reactive UI
+- [ ] Multistage docker build with css generation included
 - [ ] Write tests
