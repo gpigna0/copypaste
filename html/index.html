@@ -11,7 +11,7 @@
 
   <body class="bg-slate-900 min-h-full antialiased">
     <div
-      class="text-4xl sticky top-0 z-10 min-w-full p-4 bg-slate-800/80 shadow-md backdrop-blur-2xl font-bold"
+      class="text-2xl sm:text-3xl sticky top-0 z-10 min-w-full px-6 py-2 bg-slate-700/80 shadow-md backdrop-blur-2xl font-bold flex space-x-4 sm:space-x-8"
     >
       <a
         href=""
@@ -20,7 +20,6 @@
         hx-swap="innerHTML"
         hx-replace-url="true"
         hx-push-url="true"
-        class="duration-100 hover:text-orange-100"
         >Clipboard</a
       >
       <a
@@ -30,16 +29,15 @@
         hx-swap="innerHTML"
         hx-replace-url="true"
         hx-push-url="true"
-        class="duration-100 hover:text-orange-100"
         >Files</a
       >
     </div>
-    <div id="list-container" class="px-8 mt-8">
+    <div id="list-container" class="px-6 mt-6 sm:mt-8">
       {{block "cliplist" .}}{{end}} {{block "files" .}}{{end}}
     </div>
     <div
-      class="z-20 absolute top-0 backdrop-blur-2xl h-fit w-fit flex justify-center items-center"
       id="new-clip"
+      class="z-20 absolute top-0 backdrop-blur-xl h-fit w-fit flex justify-center items-center"
     ></div>
     <div
       hidden

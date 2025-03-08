@@ -1,16 +1,16 @@
 {{define "newclip"}}
 <div
-  id="ntodo-container"
+  id="nclip-container"
   class="h-screen w-screen flex items-center justify-center"
 >
   <div
-    class="max-w-5/6 w-1/3 bg-slate-800 text-center rounded-2xl flex-col space-y-8 p-6"
+    class="max-w-9/10 sm:max-w-2/3 lg:max-w-1/3 w-full bg-slate-800 text-center rounded-2xl flex-col space-y-8 p-6"
   >
     <h2 class="text-3xl font-bold">New Entry</h2>
     <form
-      id="ntodoform"
+      id="nclipform"
       hx-post="/clipboard/new"
-      hx-target="#ntodo-container"
+      hx-target="#nclip-container"
       hx-swap="outerHTML"
     >
       <textarea
@@ -21,18 +21,12 @@
         required
       ></textarea>
     </form>
-    <div class="">
-      <input
-        type="submit"
-        form="ntodoform"
-        value="Create"
-        class="btn"
-        placeholder="Due Time..."
-      />
+    <div class="space-x-4 sm:space-x-6">
+      <input type="submit" form="nclipform" value="Create" class="btn" />
       <button
         hx-get="/"
         hx-swap="delete"
-        hx-target="#ntodo-container"
+        hx-target="#nclip-container"
         class="btn"
       >
         Cancel
