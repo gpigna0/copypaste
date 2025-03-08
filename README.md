@@ -28,8 +28,9 @@ Upload the files you want to share with other devices
 ## TODO
 
 - [x] ~Implement files management~
-- [ ] Add icons for files
+- [ ] Add icons based on filetypes
+- [ ] Auto updating clipboard
 - [x] ~Improve the UI~
-- [ ] Reactive UI
+- [x] ~Reactive UI~
 - [ ] Multistage docker build with css generation included
 - [ ] Write tests
