@@ -14,10 +14,11 @@ func handlerWrapper(h func(HTMLWriter, *http.Request, session)) http.HandlerFunc
 
 		if s, ex := sessions.session(r); !ex && r.URL.Path != "/login" {
 			w.Header().Set("HX-Retarget", "body")
-			ws.HTMX = true // This way login is sent as a full page
+			ws.HTMX = true // Login does not need index template even if the request is not from HTMX
 			sendTemplate(ws, "", "login", "./html/login.html")
 		} else {
 			s.revitalize()
+			ws.HTMX = isHTMX(r)
 			h(ws, r, s)
 		}
 
@@ -27,18 +28,20 @@ func handlerWrapper(h func(HTMLWriter, *http.Request, session)) http.HandlerFunc
 		path := r.URL.Path
 		statusColor := statusCodeColor(ws.Status)
 		methodColor := methodColor(r.Method)
+		htmxColor := htmxColor(ws.HTMX)
 		resetColor := reset
 
 		clientIP := r.RemoteAddr
 		method := r.Method
 		statusCode := ws.Status
 
-		fmt.Printf("%v |%s %3d %s| %13v | %15s |%s %-7s %s|\n%s\n",
+		fmt.Printf("%v |%s %3d %s| %13v | %15s |%s %-7s %s|%s HTMX %s|\n%s\n",
 			timeStamp.Format("2006/01/02 - 15:04:05"),
 			statusColor, statusCode, resetColor,
 			latency,
 			clientIP,
 			methodColor, method, resetColor,
+			htmxColor, resetColor,
 			path,
 		)
 	}
@@ -88,5 +91,13 @@ func methodColor(m string) string {
 		return white
 	default:
 		return reset
+	}
+}
+
+func htmxColor(h bool) string {
+	if h {
+		return green
+	} else {
+		return red
 	}
 }
