@@ -44,8 +44,10 @@ type sessionMap struct {
 	sync.RWMutex
 }
 
-func newSessionMap() sessionMap {
-	return sessionMap{make(map[string]session), sync.RWMutex{}}
+func newSessionMap() *sessionMap {
+	newMap := sessionMap{make(map[string]session), sync.RWMutex{}}
+	newMap.cleanRoutine()
+	return &newMap
 }
 
 func (m *sessionMap) session(r *http.Request) (s session, exists bool) {
@@ -53,7 +55,7 @@ func (m *sessionMap) session(r *http.Request) (s session, exists bool) {
 
 	cookie, err := r.Cookie(SESSIONCOOKIE)
 	if err != nil {
-		log.Printf("ERR: %v\n", err)
+		log.Printf("err: %v\n", err)
 		return
 	}
 
@@ -61,6 +63,19 @@ func (m *sessionMap) session(r *http.Request) (s session, exists bool) {
 	s, exists = m.m[cookie.Value]
 	m.RUnlock()
 	return
+}
+
+func (m *sessionMap) cleanRoutine() {
+	time.AfterFunc(6*time.Hour, func() {
+		log.Println("log: Removing expired sessions")
+		for k, session := range m.m {
+			if session.expired() {
+				m.Lock()
+				delete(m.m, k)
+				m.Unlock()
+			}
+		}
+	})
 }
 
 // A func to be called periodically to remove expired sessions

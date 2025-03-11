@@ -27,7 +27,7 @@ func (env *Env) mainPage(w HTMLWriter, r *http.Request, _ session) {
 func (env *Env) getClips(w HTMLWriter, r *http.Request, _ session) {
 	clips, err := env.dataManager.allClips(env.db)
 	if err != nil {
-		log.Printf("ERR: %v\n", err)
+		log.Printf("err: %v\n", err)
 		clips = make([]clipboard, 0)
 	}
 
@@ -156,7 +156,7 @@ func (env *Env) deleteClip(w HTMLWriter, r *http.Request, s session) {
 	ids := r.URL.Query()["id"]
 
 	if err := env.dataManager.deleteClips(env.db, s.user, ids...); err != nil {
-		log.Printf("ERR: %v\n", err)
+		log.Printf("err: %v\n", err)
 		w.Status = http.StatusInternalServerError
 	}
 	w.Writer.Header().Set("HX-Trigger", "Clipboard-Load")
@@ -166,7 +166,7 @@ func (env *Env) deleteClip(w HTMLWriter, r *http.Request, s session) {
 
 func (env *Env) deleteAllClips(w HTMLWriter, r *http.Request, s session) {
 	if err := env.dataManager.deleteAllClips(env.db, s.user); err != nil {
-		log.Printf("ERR: %v\n", err)
+		log.Printf("err: %v\n", err)
 		w.Status = http.StatusInternalServerError
 	}
 	w.Writer.Header().Set("HX-Trigger", "Clipboard-Load")
@@ -179,7 +179,7 @@ func (env *Env) deleteFile(w HTMLWriter, r *http.Request, s session) {
 
 	err := env.dataManager.deleteFiles(env.db, s.user, ids...)
 	if err != nil {
-		log.Printf("ERR: %v\n", err)
+		log.Printf("err: %v\n", err)
 		w.Status = http.StatusInternalServerError
 	} else {
 		for _, fname := range ids {
