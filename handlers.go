@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -107,11 +106,7 @@ func (env *Env) postClip(w HTMLWriter, r *http.Request, s session) {
 		log.Printf("err: %v\n", err)
 	}
 
-	select {
-	case s.clipEvtCh <- 1:
-	case <-time.After(time.Second):
-		log.Printf("err: could not contact sse handler")
-	}
+	env.clipBroker.Publish(s.user, 1)
 
 	sendTemplate(w, "", "newclip", "./html/newclip.html")
 }
@@ -169,7 +164,9 @@ func (env *Env) deleteClip(w HTMLWriter, r *http.Request, s session) {
 		log.Printf("err: %v\n", err)
 		w.Status = http.StatusInternalServerError
 	}
-	w.Writer.Header().Set("HX-Trigger", "Clipboard-Load")
+
+	env.clipBroker.Publish(s.user, 1)
+	w.Status = http.StatusNoContent
 	w.WriteHeader()
 	sendTemplate(w, "", "nil", "./html/index.html")
 }
@@ -179,7 +176,9 @@ func (env *Env) deleteAllClips(w HTMLWriter, r *http.Request, s session) {
 		log.Printf("err: %v\n", err)
 		w.Status = http.StatusInternalServerError
 	}
-	w.Writer.Header().Set("HX-Trigger", "Clipboard-Load")
+
+	env.clipBroker.Publish(s.user, 1)
+	w.Status = http.StatusNoContent
 	w.WriteHeader()
 	sendTemplate(w, "", "nil", "./html/index.html")
 }
@@ -205,26 +204,26 @@ func (env *Env) deleteFile(w HTMLWriter, r *http.Request, s session) {
 }
 
 // SSE //
-func (*Env) clipUpdate(w HTMLWriter, r *http.Request, s session) {
+func (env *Env) clipUpdate(w HTMLWriter, r *http.Request, s session) {
 	writer := w.Writer // set the needed headers
 	writer.Header().Set("Content-Type", "text/event-stream")
 	writer.Header().Set("Cache-Control", "no-cache")
 	writer.Header().Set("Connection", "keep-alive")
 
+	env.clipBroker.Subscribe <- s
 	done := r.Context().Done()
-	log.Printf("%s is listening", s.user)
 
 	rc := http.NewResponseController(writer)
 	for {
 		select {
 		case <-done:
-			log.Printf("Client disconnected\n")
+			env.clipBroker.Unsubscribe <- s
 			return
 		case _, open := <-s.clipEvtCh:
 			if !open {
 				return
 			}
-			if _, err := fmt.Fprintf(writer, "event: %s-update-clipboard\n\n", s.user); err != nil {
+			if _, err := fmt.Fprintf(writer, "event: %s-update-clipboard\ndata:\n\n", s.user); err != nil {
 				log.Printf("err: %v", err)
 				continue
 			}

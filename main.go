@@ -13,6 +13,7 @@ import (
 type Env struct {
 	db          *pgxpool.Pool
 	dataManager dbData
+	clipBroker  EventBroker
 }
 
 func NewEnv() (*Env, error) {
@@ -61,8 +62,10 @@ CREATE TABLE IF NOT EXISTS files (
 		log.Printf("err: %v\n", err)
 		return nil, err
 	}
+	brk := NewEventBroker()
+	brk.Init()
 
-	return &Env{pool, defaultDbData{}}, nil
+	return &Env{pool, defaultDbData{}, brk}, nil
 }
 
 func main() {
