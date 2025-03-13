@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -24,14 +25,18 @@ func (env *Env) mainPage(w HTMLWriter, r *http.Request, _ session) {
 
 // GET //
 
-func (env *Env) getClips(w HTMLWriter, r *http.Request, _ session) {
+func (env *Env) getClips(w HTMLWriter, r *http.Request, s session) {
 	clips, err := env.dataManager.allClips(env.db)
 	if err != nil {
 		log.Printf("err: %v\n", err)
 		clips = make([]clipboard, 0)
 	}
 
-	sendTemplate(w, clips, "cliplist", "./html/cliplist.html")
+	obj := map[string]any{
+		"Username": s.user,
+		"Clip":     clips,
+	}
+	sendTemplate(w, obj, "cliplist", "./html/cliplist.html")
 }
 
 func (env *Env) newClip(w HTMLWriter, r *http.Request, _ session) {
@@ -102,7 +107,12 @@ func (env *Env) postClip(w HTMLWriter, r *http.Request, s session) {
 		log.Printf("err: %v\n", err)
 	}
 
-	w.Writer.Header().Set("HX-Trigger", "Clipboard-Load")
+	select {
+	case s.clipEvtCh <- 1:
+	case <-time.After(time.Second):
+		log.Printf("err: could not contact sse handler")
+	}
+
 	sendTemplate(w, "", "newclip", "./html/newclip.html")
 }
 
@@ -192,4 +202,37 @@ func (env *Env) deleteFile(w HTMLWriter, r *http.Request, s session) {
 	w.Writer.Header().Set("HX-Trigger", "Files-Load")
 	w.WriteHeader()
 	sendTemplate(w, "", "nil", "./html/index.html")
+}
+
+// SSE //
+func (*Env) clipUpdate(w HTMLWriter, r *http.Request, s session) {
+	writer := w.Writer // set the needed headers
+	writer.Header().Set("Content-Type", "text/event-stream")
+	writer.Header().Set("Cache-Control", "no-cache")
+	writer.Header().Set("Connection", "keep-alive")
+
+	done := r.Context().Done()
+	log.Printf("%s is listening", s.user)
+
+	rc := http.NewResponseController(writer)
+	for {
+		select {
+		case <-done:
+			log.Printf("Client disconnected\n")
+			return
+		case _, open := <-s.clipEvtCh:
+			if !open {
+				return
+			}
+			if _, err := fmt.Fprintf(writer, "event: %s-update-clipboard\n\n", s.user); err != nil {
+				log.Printf("err: %v", err)
+				continue
+			}
+			if err := rc.Flush(); err != nil {
+				log.Printf("err: %v", err)
+				continue
+			}
+			log.Println("ok")
+		}
+	}
 }

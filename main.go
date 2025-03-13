@@ -88,6 +88,8 @@ func main() {
 	http.HandleFunc("DELETE /clipboard/all", handlerWrapper(env.deleteAllClips))
 	http.HandleFunc("DELETE /file", handlerWrapper(env.deleteFile))
 
+	http.HandleFunc("/clipboard/update", handlerWrapper(env.clipUpdate))
+
 	static := http.FileServer(http.Dir("./static"))
 	http.Handle("/", static)
 

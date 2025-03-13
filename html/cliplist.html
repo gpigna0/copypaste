@@ -11,8 +11,16 @@
   <span class="grow"></span>
   <button hx-delete="/clipboard/all" class="btn">Delete All</button>
 </div>
-<div id="clip-list" class="mt-4 flex flex-col space-y-4">
-  {{range .}}
+<div
+  id="clip-list"
+  hx-ext="sse"
+  sse-connect="/clipboard/update"
+  hx-trigger="sse:{{.Username}}-update-clipboard"
+  hx-get="/clipboard"
+  hx-target="#clip-list"
+  class="mt-4 flex flex-col space-y-4"
+>
+  {{range .Clip}}
   <div id="full-clip" class="flex items-center space-x-4">
     <span
       class="bg-slate-600/80 px-4 py-1 rounded-md grow hover:bg-slate-600/60 duration-100 whitespace-pre-wrap break-all"
