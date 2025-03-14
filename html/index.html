@@ -7,7 +7,7 @@
     <link href="/tailwind.css" rel="stylesheet" />
   </head>
 
-  <script src="/htmx.min.js"></script>
+  <script src="/htmx.min.js" defer></script>
 
   <body class="bg-slate-900 min-h-full antialiased">
     <div
@@ -54,5 +54,6 @@
       hx-swap="innerHTML"
     ></div>
   </body>
+  <script src="/htmx_sse.min.js" defer></script>
 </html>
 {{end}} {{define "nil"}}{{end}}

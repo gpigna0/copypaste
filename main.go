@@ -13,6 +13,8 @@ import (
 type Env struct {
 	db          *pgxpool.Pool
 	dataManager dbData
+	clipBroker  EventBroker
+	fileBroker  EventBroker
 }
 
 func NewEnv() (*Env, error) {
@@ -61,8 +63,12 @@ CREATE TABLE IF NOT EXISTS files (
 		log.Printf("err: %v\n", err)
 		return nil, err
 	}
+	clipbrk := NewEventBroker()
+	clipbrk.Init()
+	filebrk := NewEventBroker()
+	filebrk.Init()
 
-	return &Env{pool, defaultDbData{}}, nil
+	return &Env{pool, defaultDbData{}, clipbrk, filebrk}, nil
 }
 
 func main() {
@@ -78,7 +84,7 @@ func main() {
 	http.HandleFunc("GET /clipboard", handlerWrapper(env.getClips))
 	http.HandleFunc("GET /clipboard/new", handlerWrapper(env.newClip))
 	http.HandleFunc("GET /file", handlerWrapper(env.getFiles))
-	http.HandleFunc("GET /file/{fileId}", handlerWrapper(env.sendFile))
+	http.HandleFunc("GET /file/download/{fileId}", handlerWrapper(env.sendFile))
 
 	http.HandleFunc("POST /login", handlerWrapper(env.postLogin))
 	http.HandleFunc("POST /clipboard/new", handlerWrapper(env.postClip))
@@ -87,6 +93,9 @@ func main() {
 	http.HandleFunc("DELETE /clipboard", handlerWrapper(env.deleteClip))
 	http.HandleFunc("DELETE /clipboard/all", handlerWrapper(env.deleteAllClips))
 	http.HandleFunc("DELETE /file", handlerWrapper(env.deleteFile))
+
+	http.HandleFunc("/clipboard/update", handlerWrapper(env.clipUpdate))
+	http.HandleFunc("/file/update", handlerWrapper(env.fileUpdate))
 
 	static := http.FileServer(http.Dir("./static"))
 	http.Handle("/", static)

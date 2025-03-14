@@ -22,8 +22,9 @@ var (
 
 // Associate a cookie to a user and provide some utility functions
 type session struct {
-	user   string
-	cookie http.Cookie
+	user      string
+	clipEvtCh chan int8 // there is no need to send actual data through the channel
+	cookie    http.Cookie
 }
 
 func (s *session) revitalize() {
@@ -70,24 +71,13 @@ func (m *sessionMap) cleanRoutine() {
 		log.Println("log: Removing expired sessions")
 		for k, session := range m.m {
 			if session.expired() {
+				close(m.m[k].clipEvtCh)
 				m.Lock()
 				delete(m.m, k)
 				m.Unlock()
 			}
 		}
 	})
-}
-
-// A func to be called periodically to remove expired sessions
-func cleanSessions() {
-	sessions.Lock()
-	defer sessions.Unlock()
-	for cookie, sess := range sessions.m {
-		if sess.expired() {
-			delete(sessions.m, cookie)
-		}
-	}
-	time.AfterFunc(time.Minute, func() { cleanSessions() }) // Call this function periodically
 }
 
 // Auth checker
@@ -172,7 +162,7 @@ func makeSession(user, remember string) (*http.Cookie, error) {
 	}
 
 	sessions.Lock()
-	sessions.m[cookie.Value] = session{user, cookie}
+	sessions.m[cookie.Value] = session{user, make(chan int8), cookie}
 	sessions.Unlock()
 	return &cookie, nil
 }

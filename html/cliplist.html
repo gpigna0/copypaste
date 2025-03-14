@@ -11,34 +11,42 @@
   <span class="grow"></span>
   <button hx-delete="/clipboard/all" class="btn">Delete All</button>
 </div>
-<div id="clip-list" class="mt-4 flex flex-col space-y-4">
-  {{range .}}
-  <div id="full-clip" class="flex items-center space-x-4">
-    <span
-      class="bg-slate-600/80 px-4 py-1 rounded-md grow hover:bg-slate-600/60 duration-100 whitespace-pre-wrap break-all"
-      >{{.Text}}</span
-    >
-    <button
-      hx-delete="/clipboard?id={{.Id}}"
-      hx-target="#full-clip"
-      class="bg-slate-600/80 p-2 rounded-md hover:bg-slate-600/60 duration-100 cursor-pointer"
-    >
-      <svg
-        version="1.1"
-        viewBox="0 0 32 32"
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-4 w-4 fill-red-600"
+<div hx-ext="sse" sse-connect="/clipboard/update" class="mt-4">
+  <div
+    id="clip-list"
+    hx-get="/clipboard"
+    hx-trigger="sse:{{.Username}}-update-clipboard"
+    hx-select="#clip-list"
+    class="flex flex-col space-y-4"
+  >
+    {{range .Clip}}
+    <div id="full-clip" class="flex items-center space-x-4">
+      <span
+        class="bg-slate-600/80 px-4 py-1 rounded-md grow hover:bg-slate-600/60 duration-100 whitespace-pre-wrap break-all"
+        >{{.Text}}</span
       >
-        <path
-          d="m2.1213 30.121a2.8336 2.8336 176.53 004-.24264l23.757-23.757a3 3 90 000-4.2426 2.8336 2.8336 176.53 00-4 .24264l-23.757 23.757a3 3 90 000 4.2426z"
-        />
-        <path
-          transform="matrix(-1,0,0,1,32,0)"
-          d="m2.1213 30.121a2.8336 2.8336 176.53 004-.24264l23.757-23.757a3 3 90 000-4.2426 2.8336 2.8336 176.53 00-4 .24264l-23.757 23.757a3 3 90 000 4.2426z"
-        />
-      </svg>
-    </button>
+      <button
+        hx-delete="/clipboard?id={{.Id}}"
+        hx-target="#full-clip"
+        class="bg-slate-600/80 p-2 rounded-md hover:bg-slate-600/60 duration-100 cursor-pointer"
+      >
+        <svg
+          version="1.1"
+          viewBox="0 0 32 32"
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4 fill-red-600"
+        >
+          <path
+            d="m2.1213 30.121a2.8336 2.8336 176.53 004-.24264l23.757-23.757a3 3 90 000-4.2426 2.8336 2.8336 176.53 00-4 .24264l-23.757 23.757a3 3 90 000 4.2426z"
+          />
+          <path
+            transform="matrix(-1,0,0,1,32,0)"
+            d="m2.1213 30.121a2.8336 2.8336 176.53 004-.24264l23.757-23.757a3 3 90 000-4.2426 2.8336 2.8336 176.53 00-4 .24264l-23.757 23.757a3 3 90 000 4.2426z"
+          />
+        </svg>
+      </button>
+    </div>
+    {{end}}
   </div>
-  {{end}}
 </div>
 {{end}} {{template "cliplist" .}}
