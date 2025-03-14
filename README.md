@@ -8,11 +8,18 @@ A self-hosted solution to share text and files through a web-based interface wit
 > CopyPaste uses http. Be sure to use to secure your connection if
 > you intend to use CopyPaste outside your local network
 
-Just clone the repo and start the container
+Just create a directory and put there `compose.yaml` and rename `example.env` to
+`.env` for default options, then pull the image and start the container
 
-```sh
-cd ./copypaste
-docker compose up -d --build
+```bash
+mkdir copypaste
+cd copypaste
+
+curl -o compose.yaml https://raw.githubusercontent.com/gpigna0/copypaste/main/compose.yaml
+curl -o .env https://raw.githubusercontent.com/gpigna0/copypaste/main/example.env
+
+docker compose pull && docker compose up -d
+
 ```
 
 ## Functions
@@ -29,7 +36,7 @@ Upload the files you want to share with other devices
 
 - [x] ~Implement files management~
 - [ ] Add icons based on filetypes
-- [ ] Auto updating clipboard
+- [x] ~Auto updating clipboard and files~
 - [x] ~Improve the UI~
 - [x] ~Reactive UI~
 - [ ] Multistage docker build with css generation included
