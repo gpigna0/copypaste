@@ -48,7 +48,12 @@ func (env *Env) getFiles(w HTMLWriter, _ *http.Request, s session) {
 		log.Printf("err: %v\n", err)
 		return
 	}
-	sendTemplate(w, files, "files", "./html/files.html")
+
+	obj := map[string]any{
+		"Username": s.user,
+		"Files":    files,
+	}
+	sendTemplate(w, obj, "files", "./html/files.html")
 }
 
 func (env *Env) sendFile(w HTMLWriter, r *http.Request, s session) {
@@ -107,8 +112,6 @@ func (env *Env) postClip(w HTMLWriter, r *http.Request, s session) {
 	}
 
 	env.clipBroker.Publish(s.user, 1)
-
-	sendTemplate(w, "", "newclip", "./html/newclip.html")
 }
 
 func (env *Env) postFile(w HTMLWriter, r *http.Request, s session) {
@@ -146,13 +149,7 @@ func (env *Env) postFile(w HTMLWriter, r *http.Request, s session) {
 		}
 	}
 
-	files, err := env.dataManager.allFiles(env.db, s.user)
-	if err != nil {
-		log.Printf("err: %v\n", err)
-		w.Status = http.StatusInternalServerError
-	}
-	w.WriteHeader()
-	sendTemplate(w, files, "files", "./html/files.html")
+	env.fileBroker.Publish(s.user, 1)
 }
 
 // DELETE //
@@ -198,12 +195,15 @@ func (env *Env) deleteFile(w HTMLWriter, r *http.Request, s session) {
 			}
 		}
 	}
-	w.Writer.Header().Set("HX-Trigger", "Files-Load")
+
+	env.fileBroker.Publish(s.user, 1)
+	w.Status = http.StatusNoContent
 	w.WriteHeader()
 	sendTemplate(w, "", "nil", "./html/index.html")
 }
 
 // SSE //
+
 func (env *Env) clipUpdate(w HTMLWriter, r *http.Request, s session) {
 	writer := w.Writer // set the needed headers
 	writer.Header().Set("Content-Type", "text/event-stream")
@@ -224,6 +224,38 @@ func (env *Env) clipUpdate(w HTMLWriter, r *http.Request, s session) {
 				return
 			}
 			if _, err := fmt.Fprintf(writer, "event: %s-update-clipboard\ndata:\n\n", s.user); err != nil {
+				log.Printf("err: %v", err)
+				continue
+			}
+			if err := rc.Flush(); err != nil {
+				log.Printf("err: %v", err)
+				continue
+			}
+			log.Println("ok")
+		}
+	}
+}
+
+func (env *Env) fileUpdate(w HTMLWriter, r *http.Request, s session) {
+	writer := w.Writer // set the needed headers
+	writer.Header().Set("Content-Type", "text/event-stream")
+	writer.Header().Set("Cache-Control", "no-cache")
+	writer.Header().Set("Connection", "keep-alive")
+
+	env.fileBroker.Subscribe <- s
+	done := r.Context().Done()
+
+	rc := http.NewResponseController(writer)
+	for {
+		select {
+		case <-done:
+			env.fileBroker.Unsubscribe <- s
+			return
+		case _, open := <-s.clipEvtCh:
+			if !open {
+				return
+			}
+			if _, err := fmt.Fprintf(writer, "event: %s-update-file\ndata:\n\n", s.user); err != nil {
 				log.Printf("err: %v", err)
 				continue
 			}
