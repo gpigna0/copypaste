@@ -64,7 +64,7 @@ func (env *Env) sendFile(w HTMLWriter, r *http.Request, s session) {
 		w.Writer.Write([]byte{})
 		return
 	}
-	path := fmt.Sprintf("/filedir/%s/%s", s.user, fileId)
+	path := fmt.Sprintf("./filedir/%s/%s", s.user, fileId)
 	fileName, err := env.dataManager.fileName(env.db, s.user, fileId)
 	if err != nil {
 		log.Printf("err: %v\n", err)
@@ -136,7 +136,7 @@ func (env *Env) postFile(w HTMLWriter, r *http.Request, s session) {
 				log.Printf("err: %v\n", err)
 				continue
 			}
-			local, err := os.Create(fmt.Sprintf("/filedir/%s/%s", user, fname))
+			local, err := os.Create(fmt.Sprintf("./filedir/%s/%s", user, fname))
 			if err != nil {
 				log.Printf("err: %v\n", err)
 				continue
@@ -189,7 +189,7 @@ func (env *Env) deleteFile(w HTMLWriter, r *http.Request, s session) {
 		w.Status = http.StatusInternalServerError
 	} else {
 		for _, fname := range ids {
-			if err := os.Remove(fmt.Sprintf("/filedir/%s/%s", s.user, fname)); err != nil {
+			if err := os.Remove(fmt.Sprintf("./filedir/%s/%s", s.user, fname)); err != nil {
 				log.Printf("err: %v\n", err)
 				continue
 			}
