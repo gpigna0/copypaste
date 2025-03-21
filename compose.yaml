@@ -1,6 +1,7 @@
 services:
   copypaste:
     image: gpigna0/copypaste:latest
+    build: .
     networks:
       - copynet
     ports:
@@ -16,15 +17,21 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
-      - files:/filedir
+      - files:/code/filedir
     develop:
       watch:
+        - path: ./assets
+          target: /code/assets
+          action: sync
         - path: ./html
           target: /code/html
           action: sync
         - path: ./static
           target: /code/static
           action: sync
+        - path: ./src
+          target: /code/src
+          action: rebuild
 
   postgres:
     image: postgres:16
