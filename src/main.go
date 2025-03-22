@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,9 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+//go:embed migrations/migrations.sql
+var mig string
 
 type Env struct {
 	db          *pgxpool.Pool
@@ -31,38 +35,10 @@ func NewEnv() (*Env, error) {
 		return nil, err
 	}
 
-	initDb := `CREATE TABLE IF NOT EXISTS users (
-  username   VARCHAR(25) PRIMARY KEY,
-  password   TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS clipboard (
-  id        BIGINT GENERATED ALWAYS AS IDENTITY,
-  clip_text TEXT NOT NULL,
-  username  VARCHAR(25) NOT NULL,
-
-  CONSTRAINT fk_users
-    FOREIGN KEY (username) REFERENCES users(username)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS files (
-  id       BIGINT GENERATED ALWAYS AS IDENTITY,
-  filename TEXT UNIQUE NOT NULL,
-  username VARCHAR(25) NOT NULL,
-
-  CONSTRAINT fk_users
-    FOREIGN KEY (username) REFERENCES users(username)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
-);
-  `
-
-	if _, err := pool.Exec(context.Background(), initDb); err != nil {
-		log.Printf("err: %v\n", err)
+	if _, err := pool.Exec(context.Background(), mig); err != nil {
 		return nil, err
 	}
+
 	clipbrk := NewEventBroker()
 	clipbrk.Init()
 	filebrk := NewEventBroker()
