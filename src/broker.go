@@ -29,15 +29,15 @@ func (brk *EventBroker) Init() {
 			select {
 			case s := <-brk.Subscribe:
 				brk.recipients.Lock()
-				if m, ok := brk.recipients.m[s.user]; ok {
+				if m, ok := brk.recipients.m[s.user.Username]; ok {
 					m[s.cookie.Value] = s.clipEvtCh
 				} else {
-					brk.recipients.m[s.user] = map[string]chan int8{s.cookie.Value: s.clipEvtCh}
+					brk.recipients.m[s.user.Username] = map[string]chan int8{s.cookie.Value: s.clipEvtCh}
 				}
 				brk.recipients.Unlock()
 			case s := <-brk.Unsubscribe:
 				brk.recipients.Lock()
-				if m, ok := brk.recipients.m[s.user]; ok {
+				if m, ok := brk.recipients.m[s.user.Username]; ok {
 					delete(m, s.cookie.Value)
 				}
 				brk.recipients.Unlock()

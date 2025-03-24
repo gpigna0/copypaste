@@ -22,6 +22,12 @@ type file struct {
 	Id       uuid.UUID
 }
 
+type user struct {
+	Username string
+	Password string
+	Id       uuid.UUID
+}
+
 type dbData interface {
 	// TODO: put named arguments
 	allClips(*pgxpool.Pool) ([]clipboard, error)
@@ -34,7 +40,7 @@ type dbData interface {
 	fileName(db *pgxpool.Pool, user string, id string) (string, error)
 	deleteFiles(db *pgxpool.Pool, user string, ids ...string) error
 
-	userExists(db *pgxpool.Pool, user string) (string, error)
+	userExists(db *pgxpool.Pool, user string) (user, error)
 	insertUser(db *pgxpool.Pool, user string, password string) error
 }
 
@@ -135,14 +141,17 @@ func (defaultDbData) deleteFiles(db *pgxpool.Pool, user string, ids ...string) e
 	return nil
 }
 
-func (defaultDbData) userExists(db *pgxpool.Pool, uname string) (string, error) {
-	res := db.QueryRow(context.Background(), "SELECT (password) FROM users WHERE username=$1", uname)
-	var pw string
-	if err := res.Scan(&pw); err != nil {
-		return "", err
+func (defaultDbData) userExists(db *pgxpool.Pool, uname string) (user, error) {
+	rows, err := db.Query(context.Background(), "SELECT * FROM users WHERE username=$1", uname)
+	if err != nil {
+		return user{}, err
+	}
+	u, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[user])
+	if err != nil {
+		return user{}, err
 	}
 
-	return pw, nil
+	return u, nil
 }
 
 func (defaultDbData) insertUser(db *pgxpool.Pool, user string, password string) error {

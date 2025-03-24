@@ -48,6 +48,7 @@ func NewEnv() (*Env, error) {
 }
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	env, err := NewEnv()
 	if err != nil {
 		log.Printf("err: %v\n", err)

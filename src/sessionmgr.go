@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"sync"
 	"time"
 
@@ -22,7 +23,7 @@ var (
 
 // Associate a cookie to a user and provide some utility functions
 type session struct {
-	user      string
+	user      user
 	clipEvtCh chan int8 // there is no need to send actual data through the channel
 	cookie    http.Cookie
 }
@@ -89,7 +90,7 @@ func (env *Env) checkUser(r *http.Request) (*http.Cookie, error) {
 
 	// Get the user's password hash and compare it with the received pw.
 	// If the user does not exist create a new user
-	storedPassword, err := env.dataManager.userExists(env.db, uname)
+	user, err := env.dataManager.userExists(env.db, uname)
 	if err != nil {
 		if !errors.Is(err, pgx.ErrNoRows) {
 			return nil, err
@@ -102,17 +103,18 @@ func (env *Env) checkUser(r *http.Request) (*http.Cookie, error) {
 			return nil, err
 		}
 	} else {
-		hashCompare(pw, storedPassword)
+		hashCompare(pw, user.Password)
 	}
 
 	// Create the cookie
-	cookie, err := makeSession(uname, rem)
+	cookie, err := makeSession(user, rem)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create a file directory for the user
-	if err := os.Mkdir("./filedir/"+uname, 0664); err != nil {
+	pth := path.Join("./filedir/", user.Id.String())
+	if err := os.Mkdir(pth, 0664); err != nil {
 		if errors.Is(err, os.ErrExist) {
 			log.Printf("err: %v\n", err)
 		} else {
@@ -141,7 +143,7 @@ func loginInfo(r *http.Request) (string, string, string, error) {
 	return uname, pw, rem, nil
 }
 
-func makeSession(user, remember string) (*http.Cookie, error) {
+func makeSession(user user, remember string) (*http.Cookie, error) {
 	exp := time.Now().Add(defaultExpir)
 	if remember == "on" {
 		exp = time.Now().AddDate(50, 0, 0)
