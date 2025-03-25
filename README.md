@@ -39,5 +39,5 @@ Upload the files you want to share with other devices
 - [x] ~Auto updating clipboard and files~
 - [x] ~Improve the UI~
 - [x] ~Reactive UI~
-- [ ] Multistage docker build with css generation included
-- [ ] Write tests
+- [x] Multistage docker build with css generation included
+- [ ] Add login/logout and registration options

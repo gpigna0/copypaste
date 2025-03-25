@@ -25,10 +25,7 @@ services:
           action: sync
         - path: ./html
           target: /code/html
-          action: sync
-        - path: ./static
-          target: /code/static
-          action: sync
+          action: rebuild
         - path: ./src
           target: /code/src
           action: rebuild
