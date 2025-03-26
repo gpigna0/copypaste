@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"strings"
 
 	"github.com/google/uuid"
@@ -128,21 +127,21 @@ func (defaultDbData) fileName(db *pgxpool.Pool, user string, id string) (string,
 
 // deleteFiles deletes file entries based on received ids
 // and returns the set of filenames that need to be deleted from the system
-func (defaultDbData) deleteFiles(db *pgxpool.Pool, user string, ids ...string) error {
+func (defaultDbData) deleteFiles(db *pgxpool.Pool, username string, ids ...string) error {
 	if len(ids) == 0 {
 		return nil
 	}
 	idSet := strings.Join(ids, ",")
 
 	query := "DELETE FROM files WHERE username=$1 AND id IN ($2)"
-	if _, err := db.Exec(context.Background(), query, user, idSet); err != nil {
+	if _, err := db.Exec(context.Background(), query, username, idSet); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (defaultDbData) userExists(db *pgxpool.Pool, uname string) (user, error) {
-	rows, err := db.Query(context.Background(), "SELECT * FROM users WHERE username=$1", uname)
+func (defaultDbData) userExists(db *pgxpool.Pool, username string) (user, error) {
+	rows, err := db.Query(context.Background(), "SELECT * FROM users WHERE username=$1", username)
 	if err != nil {
 		return user{}, err
 	}
@@ -154,13 +153,18 @@ func (defaultDbData) userExists(db *pgxpool.Pool, uname string) (user, error) {
 	return u, nil
 }
 
-func (defaultDbData) insertUser(db *pgxpool.Pool, user string, password string) error {
+// insertUser first hashes the password and then creates a new user using the hashed password
+func (defaultDbData) insertUser(db *pgxpool.Pool, username string, password string) error {
 	id := uuid.New()
-	query := "INSERT INTO users (id, username, password) VALUES ($1, $2, $3)"
-	if _, err := db.Exec(context.Background(), query, id, user, password); err != nil {
+	pw, err := hashPassword(password)
+	if err != nil {
 		return err
 	}
-	log.Printf("Created user %s\n", user)
+
+	query := "INSERT INTO users (id, username, password) VALUES ($1, $2, $3)"
+	if _, err := db.Exec(context.Background(), query, id, username, pw); err != nil {
+		return err
+	}
 
 	return nil
 }
