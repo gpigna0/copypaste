@@ -21,6 +21,14 @@ func (env *Env) mainPage(w HTMLWriter, r *http.Request, _ session) {
 
 // GET //
 
+func getLogin(w HTMLWriter, r *http.Request, _ session) {
+	sendTemplate(w, "", "login", "./html/login.html")
+}
+
+func getRegister(w HTMLWriter, r *http.Request, _ session) {
+	sendTemplate(w, "", "register", "./html/register.html")
+}
+
 func (env *Env) getClips(w HTMLWriter, r *http.Request, s session) {
 	clips, err := env.dataManager.allClips(env.db)
 	if err != nil {
@@ -71,7 +79,6 @@ func (env *Env) sendFile(w HTMLWriter, r *http.Request, s session) {
 	}
 
 	w.Writer.Header().Set("Content-Disposition", "filename="+fileName)
-	// w.WriteHeader()
 	http.ServeFile(w.Writer, r, pth)
 }
 
@@ -80,8 +87,29 @@ func (env *Env) sendFile(w HTMLWriter, r *http.Request, s session) {
 func (env *Env) postLogin(w HTMLWriter, r *http.Request, _ session) {
 	cookie, err := env.checkUser(r)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			sendTemplate(w, "This user doesn't exists, create a new one?", "", "./html/login.html")
+		} else if errors.Is(err, &ErrWrongPassword{}) {
+			sendTemplate(w, "The password is not correct", "", "./html/login.html")
+		} else {
+			log.Printf("err: %v\n", err)
+			w.Status = http.StatusInternalServerError
+			w.WriteHeader()
+		}
+		return
+	}
+
+	http.SetCookie(w.Writer, cookie)
+	w.WriteHeader()
+	sendTemplate(w, "", "index", "./html/index.html")
+}
+
+func (env *Env) postRegister(w HTMLWriter, r *http.Request, _ session) {
+	cookie, err := env.registerUser(r)
+	if err != nil {
 		log.Printf("err: %v\n", err)
-		sendTemplate(w, "Invalid Credentials, create new user?", "", "./html/login.html")
+		w.Status = http.StatusInternalServerError
+		w.WriteHeader()
 		return
 	}
 

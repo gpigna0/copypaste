@@ -10,8 +10,6 @@ import (
 	"path"
 	"sync"
 	"time"
-
-	"github.com/jackc/pgx/v5"
 )
 
 const SESSIONCOOKIE = "Session-id"
@@ -20,6 +18,14 @@ var (
 	defaultExpir = 36 * time.Hour
 	sessions     = newSessionMap()
 )
+
+type ErrWrongPassword struct {
+	message string
+}
+
+func (e *ErrWrongPassword) Error() string {
+	return e.message
+}
 
 // Associate a cookie to a user and provide some utility functions
 type session struct {
@@ -81,7 +87,9 @@ func (m *sessionMap) cleanRoutine() {
 	})
 }
 
-// Auth checker
+// checkUser is the authentication function for already registered users.
+// If the user isn't found, *pgx.ErrNoRows will be returned.
+// If the password is incorrect *ErrWrongPassword will be returned.
 func (env *Env) checkUser(r *http.Request) (*http.Cookie, error) {
 	uname, pw, rem, err := loginInfo(r)
 	if err != nil {
@@ -89,21 +97,55 @@ func (env *Env) checkUser(r *http.Request) (*http.Cookie, error) {
 	}
 
 	// Get the user's password hash and compare it with the received pw.
-	// If the user does not exist create a new user
 	user, err := env.dataManager.userExists(env.db, uname)
 	if err != nil {
-		if !errors.Is(err, pgx.ErrNoRows) {
-			return nil, err
-		}
-		password, err := hashPassword(pw)
+		return nil, err
+	} else {
+		ok, err := hashCompare(pw, user.Password)
 		if err != nil {
 			return nil, err
 		}
-		if err := env.dataManager.insertUser(env.db, uname, password); err != nil {
-			return nil, err
+		if !ok {
+			return nil, &ErrWrongPassword{"user was found, but password is incorrect"}
 		}
-	} else {
-		hashCompare(pw, user.Password)
+	}
+
+	// Create the cookie
+	cookie, err := makeSession(user, rem)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if there is a file directory for the user.
+	// If there is an error try to make a new one.
+	pth := path.Join("./filedir/", user.Id.String())
+	if _, err := os.Lstat(pth); err != nil {
+		log.Printf("err: %v --- trying to create a new directory\n", err)
+		if err := os.Mkdir(pth, 0664); err != nil {
+			if errors.Is(err, os.ErrExist) {
+				log.Printf("err: %v\n", err)
+			} else {
+				return nil, err
+			}
+		}
+	}
+
+	return cookie, nil
+}
+
+// registerUser creates a new user and make a directory to store files.
+func (env *Env) registerUser(r *http.Request) (*http.Cookie, error) {
+	username, pw, rem, err := loginInfo(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := env.dataManager.insertUser(env.db, username, pw); err != nil {
+		return nil, err
+	}
+	user, err := env.dataManager.userExists(env.db, username)
+	if err != nil {
+		return nil, err
 	}
 
 	// Create the cookie
@@ -115,11 +157,7 @@ func (env *Env) checkUser(r *http.Request) (*http.Cookie, error) {
 	// Create a file directory for the user
 	pth := path.Join("./filedir/", user.Id.String())
 	if err := os.Mkdir(pth, 0664); err != nil {
-		if errors.Is(err, os.ErrExist) {
-			log.Printf("err: %v\n", err)
-		} else {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	return cookie, nil

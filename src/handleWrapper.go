@@ -12,10 +12,15 @@ func handlerWrapper(h func(HTMLWriter, *http.Request, session)) http.HandlerFunc
 
 		ws := HTMLWriter{Writer: w, Status: 200, HTMX: isHTMX(r)}
 
-		if s, ex := sessions.session(r); !ex && r.URL.Path != "/login" {
+		if s, ex := sessions.session(r); !ex {
 			w.Header().Set("HX-Retarget", "body")
-			ws.HTMX = true // Login does not need index template even if the request is not from HTMX
-			sendTemplate(ws, "", "login", "./html/login.html")
+			if r.URL.Path == "/login" || r.URL.Path == "/register" {
+				ws.HTMX = isHTMX(r)
+				h(ws, r, s)
+			} else {
+				ws.HTMX = true // Login does not need index template even if the request is not from HTMX
+				getLogin(ws, r, s)
+			}
 		} else {
 			s.revitalize()
 			ws.HTMX = isHTMX(r)
@@ -45,6 +50,10 @@ func handlerWrapper(h func(HTMLWriter, *http.Request, session)) http.HandlerFunc
 			path,
 		)
 	}
+}
+
+func notLogin(r *http.Request) bool {
+	return (r.URL.Path != "/login" && r.URL.Path != "/register")
 }
 
 const (

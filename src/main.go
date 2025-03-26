@@ -58,12 +58,15 @@ func main() {
 
 	http.HandleFunc("/{$}", handlerWrapper(env.mainPage))
 
+	http.HandleFunc("GET /login", handlerWrapper(getLogin))
+	http.HandleFunc("GET /register", handlerWrapper(getRegister))
 	http.HandleFunc("GET /clipboard", handlerWrapper(env.getClips))
 	http.HandleFunc("GET /clipboard/new", handlerWrapper(env.newClip))
 	http.HandleFunc("GET /file", handlerWrapper(env.getFiles))
 	http.HandleFunc("GET /file/download/{fileId}", handlerWrapper(env.sendFile))
 
 	http.HandleFunc("POST /login", handlerWrapper(env.postLogin))
+	http.HandleFunc("POST /register", handlerWrapper(env.postRegister))
 	http.HandleFunc("POST /clipboard/new", handlerWrapper(env.postClip))
 	http.HandleFunc("POST /file/new", handlerWrapper(env.postFile))
 
