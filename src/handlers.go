@@ -10,6 +10,7 @@ import (
 	"path"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // ALL //
@@ -22,11 +23,13 @@ func (env *Env) mainPage(w HTMLWriter, r *http.Request, _ session) {
 // GET //
 
 func getLogin(w HTMLWriter, r *http.Request, _ session) {
-	sendTemplate(w, "", "login", "./html/login.html")
+	w.HTMX = true // Login does not need index template even if the request is not from HTMX
+	sendTemplate(w, "", "login_base", "./html/login_base.html", "./html/login.html")
 }
 
 func getRegister(w HTMLWriter, r *http.Request, _ session) {
-	sendTemplate(w, "", "register", "./html/register.html")
+	w.HTMX = true // Login does not need index template even if the request is not from HTMX
+	sendTemplate(w, "", "login_base", "./html/login_base.html", "./html/register.html")
 }
 
 func (env *Env) getClips(w HTMLWriter, r *http.Request, s session) {
@@ -87,19 +90,22 @@ func (env *Env) sendFile(w HTMLWriter, r *http.Request, s session) {
 func (env *Env) postLogin(w HTMLWriter, r *http.Request, _ session) {
 	cookie, err := env.checkUser(r)
 	if err != nil {
+		var e *ErrWrongPassword
 		if errors.Is(err, pgx.ErrNoRows) {
-			sendTemplate(w, "This user doesn't exists, create a new one?", "", "./html/login.html")
-		} else if errors.Is(err, &ErrWrongPassword{}) {
-			sendTemplate(w, "The password is not correct", "", "./html/login.html")
+			sendTemplate(w, "This user doesn't exists, create a new one?", "login_base", "./html/login.html", "./html/login_base.html")
+		} else if errors.As(err, &e) {
+			sendTemplate(w, "The password is not correct", "login_base", "./html/login.html", "./html/login_base.html")
 		} else {
 			log.Printf("err: %v\n", err)
 			w.Status = http.StatusInternalServerError
 			w.WriteHeader()
+			sendTemplate(w, err.Error(), "login_base", "./html/login.html", "./html/login_base.html")
 		}
 		return
 	}
 
 	http.SetCookie(w.Writer, cookie)
+	w.Writer.Header().Add("HX-Push-Url", "/")
 	w.WriteHeader()
 	sendTemplate(w, "", "index", "./html/index.html")
 }
@@ -107,13 +113,28 @@ func (env *Env) postLogin(w HTMLWriter, r *http.Request, _ session) {
 func (env *Env) postRegister(w HTMLWriter, r *http.Request, _ session) {
 	cookie, err := env.registerUser(r)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				sendTemplate(
+					w,
+					"Username already taken, please login",
+					"login_base", "./html/login.html",
+					"./html/login_base.html",
+				)
+				return
+			}
+		}
+
 		log.Printf("err: %v\n", err)
 		w.Status = http.StatusInternalServerError
 		w.WriteHeader()
+		sendTemplate(w, err.Error(), "login_base", "./html/register.html", "./html/login_base.html")
 		return
 	}
 
 	http.SetCookie(w.Writer, cookie)
+	w.Writer.Header().Add("HX-Push-Url", "/")
 	w.WriteHeader()
 	sendTemplate(w, "", "index", "./html/index.html")
 }

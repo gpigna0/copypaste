@@ -1,0 +1,22 @@
+{{define "login_base"}}
+<!doctype html>
+<html class="">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="/tailwind.css" rel="stylesheet" />
+  </head>
+
+  <script src="/htmx.min.js"></script>
+
+  <body class="bg-slate-900 antialiased">
+    <div id="main" class="min-h-screen flex items-center justify-center">
+      <div
+        class="bg-slate-800 p-6 text-center max-w-5/6 sm:max-w-md w-full rounded-2xl shadow-lg"
+      >
+        {{block "login" .}}{{end}} {{block "register" .}}{{end}}
+      </div>
+    </div>
+  </body>
+</html>
+{{end}}

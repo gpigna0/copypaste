@@ -18,7 +18,6 @@ func handlerWrapper(h func(HTMLWriter, *http.Request, session)) http.HandlerFunc
 				ws.HTMX = isHTMX(r)
 				h(ws, r, s)
 			} else {
-				ws.HTMX = true // Login does not need index template even if the request is not from HTMX
 				getLogin(ws, r, s)
 			}
 		} else {
