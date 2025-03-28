@@ -1,6 +1,6 @@
 # CopyPaste
 
-A self-hosted solution to share text and files through a web-based interface without hassles
+A self-hosted solution to share text and files in real-time through a web-based interface without hassles
 
 ## Installation
 
@@ -39,5 +39,5 @@ Upload the files you want to share with other devices
 - [x] ~Auto updating clipboard and files~
 - [x] ~Improve the UI~
 - [x] ~Reactive UI~
-- [x] Multistage docker build with css generation included
-- [ ] Add login/logout and registration options
+- [x] ~Multistage docker build with css generation included~
+- [x] ~Add login/logout and registration options~
