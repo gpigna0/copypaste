@@ -73,6 +73,18 @@ func (m *sessionMap) session(r *http.Request) (s session, exists bool) {
 	return
 }
 
+func (m *sessionMap) remove(s session) {
+	k := s.cookie.Value
+	if _, ok := m.m[k]; !ok { // This should never happen
+		log.Printf("info: triyng to logout from session %s, but it does not exist", s.cookie.Value)
+		return
+	}
+	close(m.m[k].clipEvtCh)
+	m.Lock()
+	delete(m.m, k)
+	m.Unlock()
+}
+
 func (m *sessionMap) cleanRoutine() {
 	time.AfterFunc(6*time.Hour, func() {
 		log.Println("log: Removing expired sessions")

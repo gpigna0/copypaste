@@ -31,6 +31,8 @@
         hx-push-url="true"
         >Files</a
       >
+      <span class="grow"></span>
+      <a href="" hx-get="/logout" hx-target="body" class="text-lg">Logout</a>
     </div>
     <div id="list-container" class="px-6 mt-6 sm:mt-8">
       {{block "cliplist" .}}{{end}} {{block "files" .}}{{end}}

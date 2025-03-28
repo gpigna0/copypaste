@@ -57,6 +57,7 @@ func main() {
 	defer env.db.Close()
 
 	http.HandleFunc("/{$}", handlerWrapper(env.mainPage))
+	http.HandleFunc("/logout", handlerWrapper(logout))
 
 	http.HandleFunc("GET /login", handlerWrapper(getLogin))
 	http.HandleFunc("GET /register", handlerWrapper(getRegister))

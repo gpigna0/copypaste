@@ -20,6 +20,11 @@ func (env *Env) mainPage(w HTMLWriter, r *http.Request, _ session) {
 	sendTemplate(w, "", "", "./html/index.html")
 }
 
+func logout(w HTMLWriter, r *http.Request, s session) {
+	sessions.remove(s)
+	sendTemplate(w, "Logged out successfully!", "login_base", "./html/login_base.html", "./html/login.html")
+}
+
 // GET //
 
 func getLogin(w HTMLWriter, r *http.Request, _ session) {
