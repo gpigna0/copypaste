@@ -9,7 +9,7 @@ FROM node:latest AS tailwind
 WORKDIR /tw
 RUN npm install tailwindcss @tailwindcss/cli
 COPY ./html ./html
-RUN npx @tailwindcss/cli -i ./html/input.css -o ./tailwind.css --minify
+RUN npx @tailwindcss/cli -i ./html/tailwind.css -o ./tailwind.css --minify
 
 FROM alpine:latest
 WORKDIR /code
