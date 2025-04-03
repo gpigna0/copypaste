@@ -90,6 +90,10 @@ func (env *Env) sendFile(w HTMLWriter, r *http.Request, s session) {
 	http.ServeFile(w.Writer, r, pth)
 }
 
+func getUser(w HTMLWriter, _ *http.Request, s session) {
+	sendTemplate(w, s.user, "user", "./html/user.html")
+}
+
 // POST //
 
 func (env *Env) postLogin(w HTMLWriter, r *http.Request, _ session) {
