@@ -41,6 +41,7 @@ type dbData interface {
 
 	userExists(db *pgxpool.Pool, user string) (user, error)
 	insertUser(db *pgxpool.Pool, user string, password string) error
+	deleteUser(db *pgxpool.Pool, user string) error
 }
 
 type defaultDbData struct{}
@@ -166,5 +167,12 @@ func (defaultDbData) insertUser(db *pgxpool.Pool, username string, password stri
 		return err
 	}
 
+	return nil
+}
+
+func (defaultDbData) deleteUser(db *pgxpool.Pool, username string) error {
+	if _, err := db.Exec(context.Background(), "DELETE FROM users WHERE username=$1", username); err != nil {
+		return err
+	}
 	return nil
 }

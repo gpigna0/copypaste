@@ -251,6 +251,30 @@ func (env *Env) deleteFile(w HTMLWriter, r *http.Request, s session) {
 	sendTemplate(w, "", "nil", "./html/index.html")
 }
 
+func (env *Env) deleteUser(w HTMLWriter, r *http.Request, s session) {
+	if s.user.Id.String() != r.PathValue("id") {
+		w.Status = http.StatusUnauthorized
+		w.WriteHeader()
+		sendTemplate(w, "", "index", "./html/index.html")
+		return
+	}
+	if err := env.dataManager.deleteUser(env.db, s.user.Username); err != nil {
+		w.Status = http.StatusInternalServerError
+		w.WriteHeader()
+		sendTemplate(w, "", "index", "./html/index.html")
+		return
+	}
+
+	// ISSUE: This is bad. Probably better to group sessions by user too
+	for _, sess := range sessions.m {
+		if sess.user.Username == s.user.Username {
+			sessions.remove(s)
+		}
+	}
+
+	sendTemplate(w, "", "login_base", "./html/register.html", "./html/login_base.html")
+}
+
 // SSE //
 
 func (env *Env) clipUpdate(w HTMLWriter, r *http.Request, s session) {

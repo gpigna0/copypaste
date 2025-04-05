@@ -75,6 +75,7 @@ func main() {
 	http.HandleFunc("DELETE /clipboard", handlerWrapper(env.deleteClip))
 	http.HandleFunc("DELETE /clipboard/all", handlerWrapper(env.deleteAllClips))
 	http.HandleFunc("DELETE /file", handlerWrapper(env.deleteFile))
+	http.HandleFunc("DELETE /user/{id}", handlerWrapper(env.deleteUser))
 
 	http.HandleFunc("/clipboard/update", handlerWrapper(env.clipUpdate))
 	http.HandleFunc("/file/update", handlerWrapper(env.fileUpdate))
