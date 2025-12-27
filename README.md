@@ -1,26 +1,10 @@
 # CopyPaste
 
+> [!Warning]
+> This is (was) a learning project. There is no guarantee that it works and
+> security may be lacking. Do not use it
+
 A self-hosted solution to share text and files in real-time through a web-based interface without hassles
-
-## Installation
-
-> [!WARNING]  
-> CopyPaste uses http. Be sure to use to secure your connection if
-> you intend to use CopyPaste outside your local network
-
-Just create a directory and put there `compose.yaml` and rename `example.env` to
-`.env` for default options, then pull the image and start the container
-
-```bash
-mkdir copypaste
-cd copypaste
-
-curl -o compose.yaml https://raw.githubusercontent.com/gpigna0/copypaste/main/compose.yaml
-curl -o .env https://raw.githubusercontent.com/gpigna0/copypaste/main/example.env
-
-docker compose pull && docker compose up -d
-
-```
 
 ## Functions
 
